@@ -1,0 +1,32 @@
+import math
+import matplotlib.pyplot as plt
+import numpy as np
+
+width = 50
+height = 50
+x = width / 2
+y = height / 2
+radius = width/2
+angle = 0
+angleStep = 0.005
+twopi = math.pi * 2
+freq = 50
+amp = 1
+dx = []
+dy = []
+dxx = []
+dyy = []
+
+while (angle <= twopi):
+    xtemp = radius * math.cos(angle)
+    ytemp = radius * math.sin(angle)
+    dx.append((radius + math.sin(angle * freq) * amp) * math.cos(angle))
+    dy.append((radius + math.sin(angle * freq) * amp) * math.sin(angle))
+    dxx.append(xtemp)
+    dyy.append(ytemp)
+    angle += angleStep
+
+print(dx,dy)
+plt.plot(dx,dy)
+plt.plot(dxx,dyy)
+plt.show()
