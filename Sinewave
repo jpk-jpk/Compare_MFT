@@ -1,32 +1,66 @@
 import math
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 
-width = 50
-height = 50
-x = width / 2
-y = height / 2
-radius = width/2
-angle = 0
-angleStep = 0.005
-twopi = math.pi * 2
-freq = 50
-amp = 1
-dx = []
-dy = []
-dxx = []
-dyy = []
+"""
+Author: Pradeep Kumar Jangam
+Date: 23rd October 2020
+The intent of the script is do offset for an data array with sine waveform 
+"""
 
-while (angle <= twopi):
-    xtemp = radius * math.cos(angle)
-    ytemp = radius * math.sin(angle)
-    dx.append((radius + math.sin(angle * freq) * amp) * math.cos(angle))
-    dy.append((radius + math.sin(angle * freq) * amp) * math.sin(angle))
-    dxx.append(xtemp)
-    dyy.append(ytemp)
-    angle += angleStep
+#Change the Path here
+#------------------------------------
+pathx = r'D:\PI 33\Sprint2\Phase.csv'
+pathr = r'D:\PI 33\Sprint2\Phase_res.csv'
+pathp = r'D:\PI 33\Sprint2\Phase_res.png'
+#------------------------------------
 
-print(dx,dy)
-plt.plot(dx,dy)
-plt.plot(dxx,dyy)
+def waveform_sine(x1,y1,x2,y2):
+    """ Given 2 points this function generates the sinewave with 100 points
+        P1 = (x1,y1)
+        P2 = (x2,y2)
+        """
+    dx=[]
+    dy=[]
+    ## Need the calibrate value to be changed to A if its holds good
+    ## Calibrate the value as see fit
+    calibrate = 0.01
+    slope=(y2-y1)/(x2-x1)     # find slope 
+    th=math.atan(slope)       
+    c=math.cos(th)
+    s=math.sin(th)
+    if slope <0:
+        A=-slope/(2*math.pi)
+    else:
+        A=slope/(2*math.pi)
+
+    K=(x2-x1)/c
+    for t in np.arange(0,1,0.01):
+        dx.append( K * (c * t - s * math.sin(2*math.pi*t)) + x1)
+        dy.append( K *( s * t + calibrate * math.sin(2*math.pi*t)) + y1)
+    return (dx,dy)
+
+
+## Phase Envelope offset with an sinwave function 
+data = pd.read_csv(pathx,comment='#')
+x=[]
+y=[]
+i=0
+for j in range(len(data)-1): 
+    xt,yt = waveform_sine(data.iloc[j, 0], data.iloc[j, 1],data.iloc[j+1, 0], data.iloc[j+1, 1])
+    x+=xt
+    y+=yt
+##Saving the output to the file pathr
+(pd.DataFrame(np.array([x,y]).T, columns=['Temperature', 'Pressure'])).to_csv(pathr,index=False)
+fig, ax = plt.subplots()
+plt.title('Phase Envelope')
+ax.plot(x,y,label='Sinewave Offset')
+ax.plot(data.iloc[:,0],data.iloc[:,1],label='Phase Envelope')
+plt.xlabel('Temperature')
+plt.ylabel('Pressure')
+## Not mentioning units
+leg = ax.legend();
 plt.show()
+## Saving the image to a file pathp
+plt.savefig(pathp)
